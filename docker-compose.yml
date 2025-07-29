@@ -1,0 +1,13 @@
+services:
+  discord:
+    build: ./discord
+    environment:
+      - POLARIS_TOKEN=${DISCORD_TOKEN}
+      - POLARIS_NATION=${USER_AGENT}
+      - POLARIS_REGION=${MAIN_REGION}
+      - REDIS_OM_URL=redis://redis:6379
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redis:/data
