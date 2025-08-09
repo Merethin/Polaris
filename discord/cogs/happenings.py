@@ -1,9 +1,12 @@
 import discord
 from discord.ext import commands
+from discord import app_commands
 from datetime import datetime, timezone
 from cogs.cache import CacheManager
 
 import views.happenings as views
+from views.error import getManageGuildRequiredEmbed
+from views.config.events import EventConfigView
 
 from models.config import ConfigModel
 
@@ -189,3 +192,11 @@ class HappeningsFeed(commands.Cog):
                 self.cache.lookupNationName(targetId),
                 datetime.now(timezone.utc)
             ).send(channel, message)
+
+    @app_commands.command(description="Edit event settings.")
+    async def events(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
+            return
+        
+        await EventConfigView(self.bot).send(interaction)
