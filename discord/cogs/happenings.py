@@ -5,7 +5,7 @@ from cogs.cache import CacheManager
 
 import views.happenings as views
 
-from models.happenings import EventSettingsModel
+from models.config import ConfigModel
 
 class HappeningsFeed(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -13,18 +13,18 @@ class HappeningsFeed(commands.Cog):
         self.cache: CacheManager = self.bot.get_cog('CacheManager')
 
     def queryChannel(self, event: str) -> tuple[discord.TextChannel | None, str | None]:
-        setting = EventSettingsModel.find(
-            EventSettingsModel.event == event
-        ).first()
+        config = ConfigModel.load()
 
-        if not setting:
+        eventConfig = config.events.get(event)
+
+        if not eventConfig:
             return (None, None)
         
-        channel = self.bot.get_channel(setting.channel)
+        channel = self.bot.get_channel(eventConfig.channel)
         mention = None
 
-        if setting.role:
-            mention = channel.guild.get_role(setting.role).mention
+        if eventConfig.role:
+            mention = channel.guild.get_role(eventConfig.role).mention
 
         return (channel, mention)
 

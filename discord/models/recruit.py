@@ -39,10 +39,3 @@ class BucketModel(JsonModel):
     class Meta:
         global_key_prefix = "Bucket"
         index_name = "bucket_idx"
-
-class RecruitSettingsModel(JsonModel):
-    role: int = Field(index=True)
-
-    class Meta:
-        global_key_prefix = "RecruitSettings"
-        index_name = "recruit_settings_idx"

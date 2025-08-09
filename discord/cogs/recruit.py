@@ -12,8 +12,9 @@ from views.recruit import RecruiterView
 from views.cache import getCacheIncompleteEmbed
 from views.error import getNonResidentEmbed, getManageGuildRequiredEmbed, getNoRecruitmentEmbed
 
-from models.recruit import UserTemplateModel, BucketModel, RecruitSettingsModel
+from models.recruit import UserTemplateModel, BucketModel
 from models.tgstats import TelegramStats
+from models.config import ConfigModel
 
 logger = logging.getLogger("recruit")
 
@@ -230,15 +231,13 @@ class RecruitmentManager(commands.Cog):
                 logger.info(f"next recruitment message for {interaction.user.name} in {timer} seconds")
                 await asyncio.sleep(timer)
 
-    def canRecruit(self, interaction: discord.Interaction):
-        all_pks = RecruitSettingsModel.all_pks()
+    def canRecruit(self, interaction: discord.Interaction) -> bool:
+        config = ConfigModel.load()
 
-        settings = [RecruitSettingsModel.get(pk) for pk in all_pks]
-
-        if len(settings) == 0:
+        if not config.recruitRole:
             return False
         
-        return interaction.user.get_role(settings[0].role) is not None
+        return interaction.user.get_role(config.recruitRole) is not None
     
     @app_commands.command(description="Start a recruitment session.")
     async def recruit(self, interaction: discord.Interaction, 
@@ -326,14 +325,8 @@ class RecruitmentManager(commands.Cog):
             await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
             return
 
-        all_pks = RecruitSettingsModel.all_pks()
-
-        settings = [RecruitSettingsModel.get(pk) for pk in all_pks]
-
-        if len(settings) == 0:
-            RecruitSettingsModel(role=role.id).save()
-        else:
-            settings[0].role = role.id
-            settings[0].save()
+        config = ConfigModel.load()
+        config.recruitRole = role.id
+        config.save()
 
         await interaction.response.send_message("Recruiter role updated.")
