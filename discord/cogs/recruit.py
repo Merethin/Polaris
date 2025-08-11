@@ -11,8 +11,11 @@ from lib import normalize
 from views.recruit import RecruiterView
 from views.cache import getCacheIncompleteEmbed
 from views.error import getNonResidentEmbed, getManageGuildRequiredEmbed, getNoRecruitmentEmbed
+from views.config.bucket import BucketSelectorView, CreateBucketView
+from views.config.template import TemplateSelectorView, CreateTemplateView
+from views.tgsetup import TemplateSetupView
 
-from models.recruit import UserTemplateModel, BucketModel
+from models.recruit import UserTemplateModel, BucketModel, TemplateModel
 from models.tgstats import TelegramStats
 from models.config import ConfigModel
 
@@ -82,21 +85,21 @@ class RecruitmentManager(commands.Cog):
 
         return result
     
-    def addNation(self, nation: str, region: str, event_type: str) -> None:
+    def addNation(self, nation: str, region: str, event: str) -> None:
         for bucket in reversed(self.buckets):
-            if bucket.filter == event_type: # FIXME: Port actual filters over
+            if bucket.filter.matches(event, region):
                 logger.info(f"added {nation} to bucket '{bucket.name}'")
                 bucket.nations.append([nation, time.time()])
                 self.bot.dispatch('new_recruit')
                 break
 
     @commands.Cog.listener()
-    async def on_worldFounding(self, nationId: str, event_type: str, regionId: str):
+    async def on_worldFounding(self, nationId: str, event: str, regionId: str):
         if self.checkPuppetFilter(nationId):
             return
         
         # don't bother wasting API calls on checking this for newfounds
-        if event_type == "refounded":
+        if event == "refounded":
             await self.cache.fetchNation(nationId)
 
             nation = self.cache.nation(nationId)
@@ -104,7 +107,7 @@ class RecruitmentManager(commands.Cog):
                 logger.warning(f"skipping new refounded nation {nationId} as it has recruitment telegrams turned off")
                 return
         
-        self.addNation(nationId, regionId, event_type)
+        self.addNation(nationId, regionId, event)
 
     @commands.Cog.listener()
     async def on_worldJoin(self, nationId: str, sourceId: str, targetId: str):
@@ -126,6 +129,10 @@ class RecruitmentManager(commands.Cog):
             logger.warning(f"skipping new WA nation {nationId} as it has over 500 million population")
             return
         
+        if self.cache.isJPOrPuppetStorage(nation.region):
+            logger.warning(f"skipping new WA nation {nationId} as it is in a puppet storage or jump point")
+            return
+        
         self.addNation(nationId, nation.region, "wa")
 
     def cooldown(self, nation: Nation) -> float:
@@ -140,9 +147,9 @@ class RecruitmentManager(commands.Cog):
 
     def findTelegramDetails(self, userId: int, templateId: str) -> str | None:
         query = (UserTemplateModel.id == templateId) & (UserTemplateModel.user == userId)
-        result = UserTemplateModel.find(query).first()
-        if result:
-            return result.tgid
+        result = UserTemplateModel.find(query).all()
+        if len(result) > 0:
+            return result[0].tgid
         return None
 
     async def recruitmentTask(self, 
@@ -182,7 +189,8 @@ class RecruitmentManager(commands.Cog):
                         tgid = self.findTelegramDetails(interaction.user.id, template)
 
                         if not tgid:
-                            await interaction.channel.send(f"""{interaction.user.mention} does not have the '{template}' template in the {bucket.name} bucket set up!\nPlease re-run /setup before recruiting.""")
+                            await interaction.channel.send(f"{interaction.user.mention} does not have the '{template}' template in the {bucket.name} bucket set up!\n"
+                                                           "Please re-run /setup before recruiting.")
                             self.recruiters[interaction.user.id] = None
                             return
                         
@@ -267,8 +275,8 @@ class RecruitmentManager(commands.Cog):
 
         minimumTimer = self.cooldown(self.cache.nation(nationId)) * 8
         if timer and timer < minimumTimer:
-            await interaction.response.send_message(f"""Timer too fast! Your nation can only recruit once every {minimumTimer} seconds. 
-                                                    It is recommended to set the timer slightly above that.""", ephemeral=True)
+            await interaction.response.send_message(f"Timer too fast! Your nation can only recruit once every {minimumTimer} seconds.\n" 
+                                                    "It is recommended to set the timer slightly above that.", ephemeral=True)
             return
         
         task = asyncio.create_task(self.recruitmentTask(interaction, 
@@ -330,3 +338,60 @@ class RecruitmentManager(commands.Cog):
         config.save()
 
         await interaction.response.send_message("Recruiter role updated.")
+
+    @app_commands.command(description="Create a new bucket.")
+    async def create_bucket(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
+            return
+
+        await CreateBucketView().send(interaction)
+
+    @app_commands.command(description="View, edit and delete existing buckets.")
+    async def buckets(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
+            return
+
+        await BucketSelectorView().send(interaction)
+
+    @app_commands.command(description="Create a new template.")
+    async def create_template(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
+            return
+
+        await CreateTemplateView().send(interaction)
+
+    @app_commands.command(description="View, edit and delete existing templates.")
+    async def templates(self, interaction: discord.Interaction):
+        if not interaction.user.guild_permissions.manage_guild:
+            await interaction.response.send_message(embed=getManageGuildRequiredEmbed())
+            return
+
+        await TemplateSelectorView().send(interaction)
+
+    @app_commands.command(description="Setup telegram templates to recruit with.")
+    async def setup(self, interaction: discord.Interaction, nation: str):
+        if not self.canRecruit(interaction):
+            await interaction.response.send_message(embed=getNoRecruitmentEmbed())
+            return
+        
+        nationId = normalize(nation)
+
+        if not self.cache.firstCacheComplete():
+            await interaction.response.send_message(embed=getCacheIncompleteEmbed())
+            return
+        
+        if nationId not in self.cache.mainRegion.nations:
+            await interaction.response.send_message(embed=getNonResidentEmbed(nation, self.cache.mainRegion.name))
+            return
+        
+        templates = TemplateModel.find(
+            TemplateModel.mode != MODE_API
+        ).all()
+        
+        await TemplateSetupView(self.userAgent, 
+                                self.cache.mainRegion.name,
+                                nationId,
+                                templates).send(interaction)

@@ -56,7 +56,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     if not nation or not token or not region:
-        print("""Please provide a user agent, region and/or token in the environment!\ndocker-compose should do this automatically if you have a proper .env file.""",
+        print("Please provide a user agent, region and/or token in the environment!\n"
+              "docker-compose should do this automatically if you have a proper .env file.",
               file=sys.stderr)
 
     userAgent = sans.set_agent(f"Polaris/{VERSION} by Merethin, used by {nation}")

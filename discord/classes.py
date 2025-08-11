@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from collections import deque
+from filters.recruit import RecruitFilter
 import time
 
 NON_WA = 0
@@ -88,22 +89,16 @@ MODE_MANUAL = 1
 MODE_BOTH = 2
 
 @dataclass
-class Event:
-    category: str
-    nation: str
-    region: str
-
-@dataclass
 class BucketQueue:
     name: str
-    filter: str
+    filter: RecruitFilter
     nations: deque[tuple[str, float]]
     priority: float
     mode: int
     templates: list[str]
 
     def create(name: str, filter: str, size: int, priority: float, mode: int, templates: list[str]):
-        return BucketQueue(name, filter, deque(maxlen=size), priority, mode, templates)
+        return BucketQueue(name, RecruitFilter().parse(filter), deque(maxlen=size), priority, mode, templates)
 
     def lastUpdate(self) -> float:
         if self.nations:
