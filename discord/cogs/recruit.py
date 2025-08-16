@@ -262,7 +262,7 @@ class RecruitmentManager(commands.Cog):
             await interaction.response.send_message(embed=getNoRecruitmentEmbed())
             return
         
-        if interaction.user.id in self.recruiters.keys():
+        if interaction.user.id in self.recruiters:
             await interaction.response.send_message(f"You already have a recruitment session active!", ephemeral=True)
             return
         
@@ -289,7 +289,7 @@ class RecruitmentManager(commands.Cog):
 
     @app_commands.command(description="Stop a recruitment session.")
     async def stop(self, interaction: discord.Interaction):
-        if interaction.user.id not in self.recruiters.keys():
+        if interaction.user.id not in self.recruiters:
             await interaction.response.send_message(f"You do not have a recruitment session active!", ephemeral=True)
             return
         

@@ -55,7 +55,7 @@ class TartCog(commands.Cog):
             self.userAgent
         )
 
-        if nationId not in self.tartViews.keys():
+        if nationId not in self.tartViews:
             self.tartViews[nationId] = []
 
         self.tartViews[nationId].append(view)
@@ -63,7 +63,7 @@ class TartCog(commands.Cog):
 
     def removeView(self, view: TartView, nationId: str):
         try:
-            if nationId in self.tartViews.keys():
+            if nationId in self.tartViews:
                 self.tartViews[nationId].remove(view)
         except ValueError:
             pass
@@ -89,7 +89,7 @@ class TartCog(commands.Cog):
                 await view.editMessage()
 
     async def handleEndo(self, endorserId: str, nationId: str):
-        if endorserId in self.tartViews.keys():
+        if endorserId in self.tartViews:
             for view in self.tartViews[endorserId]:
                 if nationId == view.currentNation:
                     view.queryNewNation()
@@ -99,7 +99,7 @@ class TartCog(commands.Cog):
                     await view.editMessage()
 
     async def handleUnendo(self, endorserId: str, nationId: str):
-        if endorserId in self.tartViews.keys():
+        if endorserId in self.tartViews:
             for view in self.tartViews[endorserId]:
                 view.nations.appendleft((None, nationId))
                 await view.editMessage()

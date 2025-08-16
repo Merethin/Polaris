@@ -57,7 +57,7 @@ class CacheManager(commands.Cog):
         return self.mainRegion
     
     def isNationCached(self, id: str) -> bool:
-        return id in self.nations.keys()
+        return id in self.nations
     
     def inWa(self, nationId: str) -> bool:
         return nationId in self.waNations
@@ -86,7 +86,7 @@ class CacheManager(commands.Cog):
         return regionId in self.puppetRegions or regionId in self.jumpPointRegions
     
     def inRegion(self, nationId: str, regionId: str) -> bool:
-        if regionId not in self.regionalNations.keys():
+        if regionId not in self.regionalNations:
             return False
         
         return nationId in self.regionalNations[regionId]
@@ -202,7 +202,7 @@ class CacheManager(commands.Cog):
     
     @commands.Cog.listener()
     async def on_eventCte(self, nationId: str, regionId: str) -> None:
-        if regionId in self.regionalNations.keys():
+        if regionId in self.regionalNations:
             self.regionalNations[regionId].discard(nationId)
 
         if self.isNationCached(nationId):
@@ -226,7 +226,7 @@ class CacheManager(commands.Cog):
 
     @commands.Cog.listener()
     async def on_eventFounding(self, nationId: str, event: str, regionId: str) -> None:
-        if regionId not in self.regionalNations.keys():
+        if regionId not in self.regionalNations:
             self.regionalNations[regionId] = set()
 
         self.regionalNations[regionId].add(nationId)
@@ -241,10 +241,10 @@ class CacheManager(commands.Cog):
 
     @commands.Cog.listener()
     async def on_eventMove(self, nationId: str, sourceId: str, targetId: str) -> None:
-        if sourceId in self.regionalNations.keys():
+        if sourceId in self.regionalNations:
             self.regionalNations[sourceId].discard(nationId)
 
-        if targetId not in self.regionalNations.keys():
+        if targetId not in self.regionalNations:
             self.regionalNations[targetId] = set()
 
         self.regionalNations[targetId].add(nationId)
@@ -360,7 +360,7 @@ class CacheManager(commands.Cog):
 
     @commands.Cog.listener()
     async def on_eventRegionUpdate(self, regionId: str) -> None:
-        if regionId in self.regionalNations.keys():
+        if regionId in self.regionalNations:
             for nation in self.regionalNations[regionId]:
                 if self.isNationCached(nation):
                     self.nation(nation).endorsements = self.verifiedEndorsements(nationId=nation)
