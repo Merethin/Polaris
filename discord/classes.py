@@ -118,7 +118,7 @@ RMB_SELF_DELETED = 2
 RMB_MOD_SUPPRESSED = 9
     
 @dataclass
-class Message:
+class RMBMessage:
     id: int
     timestamp: int
     nation: str

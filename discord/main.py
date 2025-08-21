@@ -7,6 +7,7 @@ from cogs.cache import CacheManager
 from cogs.events import EventListener
 from cogs.recruit import RecruitmentManager
 from cogs.happenings import HappeningsFeed
+from cogs.rmb import RMBFeed
 from cogs.wastats import WAStatsCog
 from cogs.tart import TartCog
 
@@ -33,6 +34,7 @@ class PolarisBot(commands.Bot):
         await self.add_cog(CacheManager(self, self.region))
         await self.add_cog(RecruitmentManager(self, self.userAgent))
         await self.add_cog(HappeningsFeed(self))
+        await self.add_cog(RMBFeed(self))
         await self.add_cog(WAStatsCog(self))
         await self.add_cog(TartCog(self, self.userAgent))
 

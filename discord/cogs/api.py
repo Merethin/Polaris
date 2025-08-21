@@ -95,8 +95,15 @@ class APIClient(commands.Cog):
                 if delegate == "0":
                     delegate = None
 
-                nations = set(response.xml.find("./NATIONS").text.split(":"))
-                recruiters = set(response.xml.find("./RECRUITERS").text.split(","))
+                nationList = response.xml.find("./NATIONS").text
+                nations = []
+                if nationList:
+                    nations = set(nationList.split(":"))
+
+                recruiterList = response.xml.find("./RECRUITERS").text
+                recruiters = []
+                if recruiterList:
+                    recruiters = set(recruiterList.split(","))
 
                 officers = {}
 
@@ -134,7 +141,7 @@ class APIClient(commands.Cog):
         except httpx.ReadTimeout:
             logger.warning(f"response for sendAPITelegram({telegram.tgid}) timed out")
 
-    async def fetchRMBPosts(self, regionId: str, fromid: int, limit: int) -> list[Message]:
+    async def fetchRMBPosts(self, regionId: str, fromid: int, limit: int) -> list[RMBMessage]:
         while True:
             try:
                 response = await self.client.get(sans.Region(regionId, 
@@ -150,7 +157,7 @@ class APIClient(commands.Cog):
                     nation = post.find("./NATION").text
                     status = int(post.find("./STATUS").text)
 
-                    message = Message(id, timestamp, nation, status, None, None)
+                    message = RMBMessage(id, timestamp, nation, status, None, None)
 
                     if status != RMB_MOD_SUPPRESSED and status != RMB_SELF_DELETED:
                         message.content = post.find("./MESSAGE").text

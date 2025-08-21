@@ -19,7 +19,9 @@ EVENTS: list[tuple[str, re.Pattern]] = [
     ("Cte", re.compile(r"@@([a-z0-9_\-]+)@@ ceased to exist in %%([a-z0-9_\-]+)%%")),
     ("Move", re.compile(r"@@([a-z0-9_\-]+)@@ relocated from %%([a-z0-9_\-]+)%% to %%([a-z0-9_\-]+)%%")),
     ("Rmb", re.compile(r"@@([a-z0-9_\-]+)@@ lodged <a href=\"/region=(?:[a-z0-9_\-]+)/page=display_region_rmb\?postid=([0-9]+)#p(?:[0-9]+)\">a message</a> on the %%([a-z0-9_\-]+)%% Regional Message Board")),
-    ("Flag", re.compile(r"@@([a-z0-9_\-]+)@@ altered its national flag"))
+    ("Flag", re.compile(r"@@([a-z0-9_\-]+)@@ altered its national flag")),
+    ("Suppress", re.compile(r"@@([a-z0-9_\-]+)@@ suppressed a post on the %%([a-z0-9_\-]+)%% Regional Message Board")),
+    ("Unsuppress", re.compile(r"@@([a-z0-9_\-]+)@@ unsuppressed a post on the %%([a-z0-9_\-]+)%% Regional Message Board")),
 ]
 
 class EventListener(commands.Cog):

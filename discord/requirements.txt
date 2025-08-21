@@ -22,6 +22,7 @@ httpx==0.28.1
 idna==3.10
 iniconfig==2.1.0
 kiwisolver==1.4.8
+lark==1.2.2
 Levenshtein==0.27.1
 matplotlib==3.10.5
 more-itertools==10.7.0

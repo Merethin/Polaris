@@ -416,5 +416,23 @@ class CacheManager(commands.Cog):
             logger.warning(f"Nation {oldDelegateId} lost the delegacy in {regionId}")
 
     @commands.Cog.listener()
+    async def on_eventRmb(self, nationId: str, postId: str, regionId: str) -> None:
+        if regionId == self.mainRegionId:
+            self.bot.dispatch('localRmb', nationId, postId, regionId)
+            logger.info(f"Nation {nationId} posted post {postId} in the {regionId} RMB")
+
+    @commands.Cog.listener()
+    async def on_eventSuppress(self, nationId: str, regionId: str) -> None:
+        if regionId == self.mainRegionId:
+            self.bot.dispatch('localSuppress', nationId, regionId)
+            logger.warning(f"Nation {nationId} suppressed a post in the {regionId} RMB")
+
+    @commands.Cog.listener()
+    async def on_eventUnsuppress(self, nationId: str, regionId: str) -> None:
+        if regionId == self.mainRegionId:
+            self.bot.dispatch('localUnsuppress', nationId, regionId)
+            logger.warning(f"Nation {nationId} unsuppressed a post in the {regionId} RMB")
+
+    @commands.Cog.listener()
     async def on_startJobs(self):
         self.checkForRebuild.start()

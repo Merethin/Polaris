@@ -5,6 +5,8 @@ from .events import EventSettingsModel
 class ConfigModel(JsonModel):
     recruitRole: Optional[int] = Field(index=False, default=None)
     events: dict[str, EventSettingsModel] = Field(index=False, default={})
+    rmbChannel: Optional[int] = Field(index=False, default=None)
+    rmbLastPost: int = Field(index=False, default=0)
 
     class Meta:
         global_key_prefix = "Config"
