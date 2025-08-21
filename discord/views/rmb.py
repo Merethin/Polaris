@@ -49,7 +49,7 @@ class RMBView(discord.ui.View):
                 await self.cache.fetchNation(nation.id)
                 nation = self.cache.nation(nation.id)
 
-            embed.set_thumbnail(nation.flagUrl)
+            embed.set_thumbnail(url=nation.flagUrl)
         
         return embed
 
