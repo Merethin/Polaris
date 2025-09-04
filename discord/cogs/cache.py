@@ -1,7 +1,7 @@
 from discord.ext import commands, tasks
 import time, asyncio, logging
 from classes import *
-from lib import displayName
+from lib import displayName, normalize
 
 from cogs.api import APIClient
 
@@ -17,7 +17,7 @@ class CacheManager(commands.Cog):
 
     def __init__(self, bot: commands.Bot, mainRegionId: str):
         self.bot = bot
-        self.mainRegionId = mainRegionId
+        self.mainRegionId = normalize(mainRegionId)
         self.api: APIClient = self.bot.get_cog('APIClient')
 
         self.waNations = set()
