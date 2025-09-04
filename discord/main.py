@@ -10,6 +10,7 @@ from cogs.happenings import HappeningsFeed
 from cogs.rmb import RMBFeed
 from cogs.wastats import WAStatsCog
 from cogs.tart import TartCog
+from cogs.inactive import InactiveNationsCog
 
 logger = logging.getLogger("main")
 
@@ -37,6 +38,7 @@ class PolarisBot(commands.Bot):
         await self.add_cog(RMBFeed(self))
         await self.add_cog(WAStatsCog(self))
         await self.add_cog(TartCog(self, self.userAgent))
+        await self.add_cog(InactiveNationsCog(self))
 
         self.dispatch('startJobs')
 

@@ -248,7 +248,7 @@ class QuoteTag(Tag):
         if self.author == "0" or self.id == "0":
             return quoted
         
-        return f"**[Quoted from {displayName(self.author)}](https://www.nationstates.net/page=rmb/postid={self.id})**:\n{quoted}"
+        return f"**[Quoted from {displayName(self.author)}](https://www.nationstates.net/page=display_region_rmb/region=%%regionid%%?postid={self.id}#p{self.id})**:\n{quoted}"
 
 @dataclass
 class SpoilerTag(Tag):

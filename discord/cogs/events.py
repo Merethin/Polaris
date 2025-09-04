@@ -1,4 +1,4 @@
-import re, logging
+import re, logging, httpx, asyncio
 from discord.ext import commands
 
 from cogs.api import APIClient
@@ -31,19 +31,24 @@ class EventListener(commands.Cog):
     async def listen(self):
         api: APIClient = self.bot.get_cog('APIClient')
 
-        async for event in api.serverSentEvents("admin", 
-                                                "endo", 
-                                                "founding",
-                                                "member", 
-                                                "move",
-                                                "change",
-                                                "rmb"):
-            for (event_type, event_regex) in EVENTS:
-                match = event_regex.match(event["str"])
-                if match is not None:
-                    logger.debug(f"new {event_type}: {event["str"]}")
-                    self.bot.dispatch(f"event{event_type}", *match.groups())
-                    break
+        while True:
+            try:
+                async for event in api.serverSentEvents("admin", 
+                                                        "endo", 
+                                                        "founding",
+                                                        "member", 
+                                                        "move",
+                                                        "change",
+                                                        "rmb"):
+                    for (event_type, event_regex) in EVENTS:
+                        match = event_regex.match(event["str"])
+                        if match is not None:
+                            logger.debug(f"new {event_type}: {event["str"]}")
+                            self.bot.dispatch(f"event{event_type}", *match.groups())
+                            break
+            except httpx.ReadError:
+                logger.warning("read error in SSE connection, waiting 60 seconds to reconnect")
+                await asyncio.sleep(60)
 
     @commands.Cog.listener()
     async def on_startJobs(self):

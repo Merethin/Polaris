@@ -16,7 +16,7 @@ from views.config.template import TemplateSelectorView, CreateTemplateView
 from views.tgsetup import TemplateSetupView
 
 from models.recruit import UserTemplateModel, BucketModel, TemplateModel
-from models.tgstats import TelegramStats
+from models.tgstats import TelegramStats, Recipient
 from models.config import ConfigModel
 
 logger = logging.getLogger("recruit")
@@ -79,7 +79,7 @@ class RecruitmentManager(commands.Cog):
         for i in range(max):
             if bucket.nations:
                 (nation, time) = bucket.nations.pop()
-                result.append(nation)
+                result.append((nation, time - bucket.priority))
             else:
                 break
 
@@ -197,7 +197,7 @@ class RecruitmentManager(commands.Cog):
                         message = await RecruiterView(
                             interaction.user, 
                             self.userAgent, tgid, 
-                            targets, nation.id).send(interaction.channel)
+                            [t[0] for t in targets], nation.id).send(interaction.channel)
 
                         TelegramStats(
                             timestamp=time.time(),
@@ -205,7 +205,7 @@ class RecruitmentManager(commands.Cog):
                             senderDisplayName=interaction.user.name,
                             bucket=bucket.name,
                             template=template,
-                            recipientCount=len(targets)
+                            recipients=[Recipient(name, time) for name, time in targets]
                         ).save()
 
                         if confirm:

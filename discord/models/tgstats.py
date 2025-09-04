@@ -1,4 +1,8 @@
-from redis_om import JsonModel, Field
+from redis_om import JsonModel, EmbeddedJsonModel, Field
+
+class Recipient(EmbeddedJsonModel):
+    name: str
+    timeAddedToQueue: float
 
 class TelegramStats(JsonModel):
     timestamp: float = Field(index=True)
@@ -6,7 +10,7 @@ class TelegramStats(JsonModel):
     senderDisplayName: str = Field(index=False)
     bucket: str = Field(index=False)
     template: str = Field(index=False)
-    recipientCount: int = Field(index=False)
+    recipients: list[Recipient] = Field(index=True)
     
     class Meta:
         global_key_prefix = "TelegramStats"
