@@ -18,6 +18,9 @@ class APIClient(commands.Cog):
             except httpx.ReadTimeout:
                 logger.warning("response for fetchWa() timed out, retrying in 10 seconds")
                 await asyncio.sleep(10)
+            except httpx.ReadError:
+                logger.warning(f"response for fetchWa() errored out, retrying in 15 seconds")
+                await asyncio.sleep(15)
 
     async def fetchRegionsByTag(self, tags: list[str]) -> set[str]:
         while True:
@@ -32,6 +35,9 @@ class APIClient(commands.Cog):
             except httpx.ReadTimeout:
                 logger.warning(f"response for fetchRegionsByTag({tags}) timed out, retrying in 10 seconds")
                 await asyncio.sleep(10)
+            except httpx.ReadError:
+                logger.warning(f"response for fetchRegionsByTag({tags}) errored out, retrying in 15 seconds")
+                await asyncio.sleep(15)
 
     async def fetchNation(self, id: str) -> Nation | None:
         while True:
@@ -79,6 +85,9 @@ class APIClient(commands.Cog):
             except httpx.ReadTimeout:
                 logger.warning(f"response for fetchNation({id}) timed out, retrying in 10 seconds")
                 await asyncio.sleep(10)
+            except httpx.ReadError:
+                logger.warning(f"response for fetchNation({id}) errored out, retrying in 15 seconds")
+                await asyncio.sleep(15)
 
     async def fetchRegion(self, id: str) -> None:
         while True:
@@ -120,6 +129,9 @@ class APIClient(commands.Cog):
             except httpx.ReadTimeout:
                 logger.warning(f"response for fetchRegion({id}) timed out, retrying in 10 seconds")
                 await asyncio.sleep(10)
+            except httpx.ReadError:
+                logger.warning(f"response for fetchRegion({id}) errored out, retrying in 15 seconds")
+                await asyncio.sleep(15)
 
     async def sendAPITelegram(self, 
                               client_key: str,
@@ -140,6 +152,8 @@ class APIClient(commands.Cog):
             return response.content.rstrip().decode('utf-8')
         except httpx.ReadTimeout:
             logger.warning(f"response for sendAPITelegram({telegram.tgid}) timed out")
+        except httpx.ReadError:
+            logger.warning(f"response for sendAPITelegram({telegram.tgid}) errored out")
 
     async def fetchRMBPosts(self, regionId: str, fromid: int, limit: int) -> list[RMBMessage]:
         while True:
@@ -171,6 +185,9 @@ class APIClient(commands.Cog):
             except httpx.ReadTimeout:
                 logger.warning(f"response for fetchRMBPosts({regionId}) timed out, retrying in 10 seconds")
                 await asyncio.sleep(10)
+            except httpx.ReadError:
+                logger.warning(f"response for fetchRMBPosts({regionId}) errored out, retrying in 15 seconds")
+                await asyncio.sleep(15)
 
     def serverSentEvents(self, *args):
         return sans.serversent_events(self.client, *args)
