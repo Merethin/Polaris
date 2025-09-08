@@ -1,4 +1,4 @@
-import typing, time, discord, random, asyncio, logging
+import typing, time, discord, random, asyncio, logging, re
 from discord.ext import commands
 from discord import app_commands
 from collections import deque
@@ -58,8 +58,18 @@ class RecruitmentManager(commands.Cog):
         buckets.sort(reverse=True, key=lambda v: v[1])
 
         return [v[0] for v in buckets]
+
+    PUPPET_FILTER_REGEXES = [
+        re.compile(r"[a-z0-9_-]+[0-9]+"), # Nations ending with a number
+        re.compile(r"[a-z0-9_-]+_m{0,4}(cm|cd|d?c{0,3})(xc|xl|l?x{0,3})(ix|iv|v?i{0,3})") # Nations ending with a space and a roman numeral
+    ]
     
     def checkPuppetFilter(self, nation: str) -> bool:
+        for regex in self.PUPPET_FILTER_REGEXES:
+            if regex.fullmatch(nation) is not None:
+                logger.info(f"skipping likely puppet {nation}, which matches a puppet regex")
+                return True
+            
         puppet_likeliness = 0
         for other_nation in self.filteringQueue:
             likeness = ratio(nation, other_nation)
