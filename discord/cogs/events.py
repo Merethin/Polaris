@@ -1,5 +1,6 @@
-import re, logging, httpx, asyncio
-from discord.ext import commands
+import re, logging, httpx, asyncio, time
+from discord.ext import commands, tasks
+from contextlib import suppress
 
 from cogs.api import APIClient
 
@@ -27,29 +28,62 @@ EVENTS: list[tuple[str, re.Pattern]] = [
 class EventListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.lastEvent = time.time()
 
     async def listen(self):
         api: APIClient = self.bot.get_cog('APIClient')
 
         while True:
             try:
-                async for event in api.serverSentEvents("admin", 
+                self.generator = api.serverSentEvents("admin", 
                                                         "endo", 
                                                         "founding",
                                                         "member", 
                                                         "move",
                                                         "change",
-                                                        "rmb"):
+                                                        "rmb")
+                
+                async for event in self.generator:
                     for (event_type, event_regex) in EVENTS:
                         match = event_regex.match(event["str"])
                         if match is not None:
+                            self.lastEvent = time.time()
                             logger.debug(f"new {event_type}: {event["str"]}")
                             self.bot.dispatch(f"event{event_type}", *match.groups())
                             break
             except httpx.ReadError:
                 logger.warning("read error in SSE connection, waiting 60 seconds to reconnect")
-                await asyncio.sleep(60)
+                self.bot.dispatch("delayedEventRestart")
+                return
+
+    async def close(self):
+        self.task.cancel()
+        with suppress(asyncio.CancelledError):
+            await self.task
+
+        logger.info("closing SSE connection")
+
+        await self.generator._client.aclose()
+
+    async def start(self):
+        self.task = asyncio.create_task(self.listen())
+        await self.task
+
+    @tasks.loop(minutes=5)
+    async def checkActivity(self):
+        timeSinceLastEvent = time.time() - self.lastEvent
+
+        if timeSinceLastEvent > 5 * 60: # 5 minutes with no events
+            await self.close()
+            await self.start()
+            self.bot.dispatch("markDirtyCache")
+
+    @commands.Cog.listener()
+    async def on_delayedEventRestart(self):
+        await asyncio.sleep(60)
+        await self.start()
+        self.bot.dispatch("markDirtyCache")
 
     @commands.Cog.listener()
     async def on_startJobs(self):
-        await self.listen()
+        await self.start()
