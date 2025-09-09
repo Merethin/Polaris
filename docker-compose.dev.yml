@@ -5,6 +5,8 @@ services:
       - POLARIS_TOKEN=${DISCORD_TOKEN}
       - POLARIS_NATION=${USER_AGENT}
       - POLARIS_REGION=${MAIN_REGION}
+      - GIT_BRANCH=${GIT_BRANCH:-unspecified}
+      - GIT_COMMIT=${GIT_COMMIT:-unspecified}
       - REDIS_OM_URL=redis://redis:6379
   redis:
     image: "redis:alpine"

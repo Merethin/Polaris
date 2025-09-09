@@ -9,7 +9,7 @@ from redis_om import Migrator
 from cogs.cache import CacheManager
 
 from views.cache import getCacheIncompleteEmbed
-from views.wastats import WaStatsView
+from views.wastats import getWaStatsEmbed
 
 from models.wastats import WaStats
 
@@ -56,8 +56,7 @@ class WAStatsCog(commands.Cog):
         
         stats = self.calculateStats()
 
-        await interaction.response.send_message("One moment...")
-        await WaStatsView(self.cache.mainRegion.name, stats).send(interaction.channel, None)
+        await interaction.response.send_message(embed=getWaStatsEmbed(self.cache.mainRegion.name, stats))
 
     @app_commands.command(description="Display historical WA engagement rates for the region.")
     async def wahistory(self, interaction: discord.Interaction, start: str, end: str):
